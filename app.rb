@@ -33,13 +33,17 @@ end
 post '/mailin' do
   from = params['envelope']['from']
   return "Rejected email from non group member #{from}" unless RECIPIENTS.include? from
+  sent = 0
   RECIPIENTS.each do |recipient|
-    Pony.mail to: recipient,
-      from: params['envelope']['from'],
-      reply_to: EMAIL,
-      subject: params['headers']['Subject'],
-      body: params['plain'],
-      html_body: params['html']
+    unless recipient == from
+      Pony.mail to: recipient,
+        from: from,
+        reply_to: EMAIL,
+        subject: params['headers']['Subject'],
+        body: params['plain'],
+        html_body: params['html']
+      sent =+ 1
+    end
   end
-  "Sent #{RECIPIENTS.count} emails"
+  "Sent #{sent} emails"
 end
