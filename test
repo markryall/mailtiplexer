@@ -1,0 +1,1 @@
+curl -H 'user-agent:CloudMailin Server' -H 'content-type:application/json' -H 'connection:close' -H 'host:webhooks.cloudmailin.com' --data-binary @- --request POST http://localhost:4567/mailin

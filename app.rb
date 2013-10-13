@@ -4,7 +4,6 @@ require 'json'
 
 RECIPIENTS = ENV['RECIPIENTS'].split ';'
 EMAIL = ENV['CLOUDMAILIN_FORWARD_ADDRESS']
-USER = EMAIL.split('@').first
 
 Pony.options = {
   via: :smtp,
@@ -20,7 +19,7 @@ Pony.options = {
 }
 
 before do
-  if request.request_method == "POST" and request.content_type=="application/json"
+  if request.request_method == 'POST' and request.content_type == 'application/json'
     body_parameters = request.body.read
     parsed = body_parameters && body_parameters.length >= 2 ? JSON.parse(body_parameters) : nil
     params.merge!(parsed)
@@ -31,7 +30,7 @@ get '/' do
   "There are currently #{RECIPIENTS.count} recipients"
 end
 
-post "/cm#{USER}" do
+post '/mailin' do
   from = params['envelope']['from']
   return "Rejected email from non group member #{from}" unless RECIPIENTS.include? from
   RECIPIENTS.each do |recipient|
