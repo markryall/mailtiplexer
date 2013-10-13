@@ -32,6 +32,8 @@ get '/' do
 end
 
 post "/cm#{USER}" do
+  from = params['envelope']['from']
+  return "Rejected email from non group member #{from}" unless RECIPIENTS.include? from
   RECIPIENTS.each do |recipient|
     Pony.mail to: recipient,
       from: params['envelope']['from'],
