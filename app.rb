@@ -1,13 +1,12 @@
 require 'sinatra'
-require 'pony'
+require 'mail'
 require 'json'
 
 RECIPIENTS = ENV['RECIPIENTS'].split ';'
 EMAIL = ENV['CLOUDMAILIN_FORWARD_ADDRESS']
 
-Pony.options = {
-  via: :smtp,
-  via_options: {
+Mail.defaults do
+  delivery_method :smtp, {
     address: 'smtp.sendgrid.net',
     port: '587',
     domain: 'heroku.com',
@@ -16,7 +15,7 @@ Pony.options = {
     authentication: :plain,
     enable_starttls_auto: true
   }
-}
+end
 
 before do
   if request.request_method == 'POST' and request.content_type == 'application/json'
@@ -31,17 +30,26 @@ get '/' do
 end
 
 post '/mailin' do
-  from = params['envelope']['from']
+  from, subject = params['envelope']['from'], params['headers']['Subject']
+  body, html_body = params['plain'], params['html']
+  in_reply_to, references = params['headers']['In-Reply-To'], params['headers']['References']
   return "Rejected email from non group member #{from}" unless RECIPIENTS.include? from
   sent = 0
   RECIPIENTS.each do |recipient|
     unless recipient == from
-      Pony.mail to: recipient,
-        from: from,
-        reply_to: EMAIL,
-        subject: params['headers']['Subject'],
-        body: params['plain'],
-        html_body: params['html']
+       mail = Mail.new do
+        to recipient
+        from from
+        subject subject
+        body body
+        html_part do
+          content_type 'text/html; charset=UTF-8'
+          body html_body
+        end
+      end
+      mail.in_reply_to = in_reply_to if in_reply_to
+      mail.references = references if references
+      mail.deliver!
       sent =+ 1
     end
   end
