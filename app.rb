@@ -37,8 +37,9 @@ post '/mailin' do
   sent = 0
   RECIPIENTS.each do |recipient|
     unless recipient == from
-       mail = Mail.new do
+      mail = Mail.new do
         to recipient
+        reply_to EMAIL
         from from
         subject subject
         body body
